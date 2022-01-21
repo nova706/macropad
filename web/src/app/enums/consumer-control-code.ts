@@ -1,0 +1,15 @@
+export enum ConsumerControlCode {
+    RECORD = 'ConsumerControlCode.RECORD',
+    FAST_FORWARD = 'ConsumerControlCode.FAST_FORWARD',
+    REWIND = 'ConsumerControlCode.REWIND',
+    SCAN_NEXT_TRACK = 'ConsumerControlCode.SCAN_NEXT_TRACK',
+    SCAN_PREVIOUS_TRACK = 'ConsumerControlCode.SCAN_PREVIOUS_TRACK',
+    STOP = 'ConsumerControlCode.STOP',
+    EJECT = 'ConsumerControlCode.EJECT',
+    PLAY_PAUSE = 'ConsumerControlCode.PLAY_PAUSE',
+    MUTE = 'ConsumerControlCode.MUTE',
+    VOLUME_DECREMENT = 'ConsumerControlCode.VOLUME_DECREMENT',
+    VOLUME_INCREMENT = 'ConsumerControlCode.VOLUME_INCREMENT',
+    BRIGHTNESS_DECREMENT = 'ConsumerControlCode.BRIGHTNESS_DECREMENT',
+    BRIGHTNESS_INCREMENT = 'ConsumerControlCode.BRIGHTNESS_INCREMENT',
+}

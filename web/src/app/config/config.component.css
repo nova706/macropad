@@ -1,0 +1,49 @@
+:host {
+    position: absolute;
+    width: 90%;
+    top: 100px;
+    bottom: 140px;
+    overflow-x: hidden;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    grid-template-columns: 240px 1fr 300px;
+    margin-left: 5%;
+}
+
+.commands {
+    padding: 20px 0;
+}
+
+.config {
+    grid-column-start: 1;
+    grid-column-end: 4;
+    padding-bottom: 20px;
+}
+
+.command-list {
+    max-height: 100%;
+    overflow: auto;
+}
+.command-list ::ng-deep .mat-expansion-panel-body {
+    max-height: 200px;
+    overflow: auto;
+}
+
+.command-list ::ng-deep app-command:not(.FAVORITE) .remove,
+.command-list ::ng-deep app-command mat-form-field {
+    display: none !important;
+}
+
+.macro {
+    padding: 0 40px;
+    max-height: 100%;
+    overflow: auto;
+}
+.macro code {
+    margin-top: 20px;
+    display: block;
+}
+
+mat-panel-title mat-icon {
+    margin-right: 10px;
+}

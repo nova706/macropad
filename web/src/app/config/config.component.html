@@ -1,0 +1,161 @@
+<div class="config">
+
+    <button *ngIf="hasPrevious" mat-icon-button title="Previous Configuration" (click)="previous.emit()">
+        <mat-icon>chevron_left</mat-icon>
+    </button>
+
+    <mat-form-field>
+        <mat-label>Configuration Name</mat-label>
+        <input matInput type="text" [(ngModel)]="config.name" maxlength="20" required />
+    </mat-form-field>
+
+    <button *ngIf="hasNext" mat-icon-button title="Next Configuration" (click)="next.emit()">
+        <mat-icon>chevron_right</mat-icon>
+    </button>
+
+    <button style="margin-left: 10px" mat-mini-fab title="Add Configuration" (click)="new.emit()">
+        <mat-icon>add</mat-icon>
+    </button>
+
+    <button style="margin-left: 10px" mat-mini-fab title="Remove Configuration" (click)="remove.emit()">
+        <mat-icon>delete</mat-icon>
+    </button>
+</div>
+
+<app-keypad [macros]="config.macros" (selectionChange)="selectMacro($event)"></app-keypad>
+
+<div class="macro">
+
+    <mat-form-field *ngIf="selectedMacro">
+        <mat-label>Macro Name</mat-label>
+        <input matInput type="text" [(ngModel)]="selectedMacro.name" (change)="changed.emit()" maxlength="20"
+            required />
+    </mat-form-field>
+
+    <button mat-icon-button *ngIf="selectedMacro" class="color4"
+        [disabled]="!selectedMacro.name || selectedMacro.commands.length === 0" title="Add Favorite"
+        (click)="addFavorite.emit(selectedMacro)">
+        <mat-icon>favorite</mat-icon>
+    </button>
+
+    <br />
+
+    <mat-form-field *ngIf="selectedMacro">
+        <mat-label>LED Color</mat-label>
+        <input matInput type="color" [(ngModel)]="selectedMacro.color" (change)="changed.emit()" required />
+    </mat-form-field>
+
+    <div class="commands" #macroList="cdkDropList" cdkDropList (cdkDropListDropped)="drop($event)"
+        [cdkDropListData]="commands">
+        <app-command cdkDrag *ngFor="let command of selectedMacro?.commands" [command]="command"
+            (remove)="removeCommand(command)" (changed)="changed.emit()">
+        </app-command>
+    </div>
+
+    <code>{{getMacroText()}}</code>
+</div>
+
+<div class="command-list">
+
+    <mat-accordion class="example-headers-align" multi>
+        <mat-expansion-panel [expanded]="section === 0" (opened)="section = 0">
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    <mat-icon class="color1">keyboard_control_key</mat-icon>
+                    Modifiers
+                </mat-panel-title>
+            </mat-expansion-panel-header>
+
+            <div cdkDropList cdkDropListSortingDisabled (cdkDropListDropped)="drop($event)"
+                [cdkDropListConnectedTo]="[macroList]" [cdkDropListData]="modifiers">
+                <app-command cdkDrag *ngFor="let command of modifiers" [command]="command"></app-command>
+
+            </div>
+
+        </mat-expansion-panel>
+
+        <mat-expansion-panel [expanded]="section === 1" (opened)="section = 1">
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    <mat-icon class="color2">keyboard</mat-icon>
+                    Key Press
+                </mat-panel-title>
+            </mat-expansion-panel-header>
+
+            <div cdkDropList cdkDropListSortingDisabled (cdkDropListDropped)="drop($event)"
+                [cdkDropListConnectedTo]="[macroList]" [cdkDropListData]="keys">
+                <app-command cdkDrag *ngFor="let command of keys" [command]="command"></app-command>
+
+            </div>
+
+        </mat-expansion-panel>
+
+        <mat-expansion-panel [expanded]="section === 2" (opened)="section = 2">
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    <mat-icon class="color6">volume_up</mat-icon>
+                    Media Keys
+                </mat-panel-title>
+            </mat-expansion-panel-header>
+
+            <div cdkDropList cdkDropListSortingDisabled (cdkDropListDropped)="drop($event)"
+                [cdkDropListConnectedTo]="[macroList]" [cdkDropListData]="consumerControls">
+                <app-command cdkDrag *ngFor="let command of consumerControls" [command]="command"></app-command>
+
+            </div>
+
+        </mat-expansion-panel>
+
+        <mat-expansion-panel [expanded]="section === 3" (opened)="section = 3">
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    <mat-icon class="color5">mouse</mat-icon>
+                    Mouse
+                </mat-panel-title>
+            </mat-expansion-panel-header>
+
+            <div cdkDropList cdkDropListSortingDisabled (cdkDropListDropped)="drop($event)"
+                [cdkDropListConnectedTo]="[macroList]" [cdkDropListData]="mouseControls">
+                <app-command cdkDrag *ngFor="let command of mouseControls" [command]="command"></app-command>
+
+            </div>
+
+        </mat-expansion-panel>
+
+        <mat-expansion-panel [expanded]="section === 4" (opened)="section = 4">
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    <mat-icon class="color3">pending</mat-icon>
+                    Other
+                </mat-panel-title>
+            </mat-expansion-panel-header>
+
+            <div cdkDropList cdkDropListSortingDisabled (cdkDropListDropped)="drop($event)"
+                [cdkDropListConnectedTo]="[macroList]" [cdkDropListData]="otherControls">
+                <app-command cdkDrag *ngFor="let command of otherControls" [command]="command"></app-command>
+
+            </div>
+
+        </mat-expansion-panel>
+
+        <mat-expansion-panel [expanded]="section === 5" (opened)="section = 5">
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    <mat-icon class="color4">favorite</mat-icon>
+                    Favorites
+                </mat-panel-title>
+            </mat-expansion-panel-header>
+
+            <div cdkDropList cdkDropListSortingDisabled (cdkDropListDropped)="drop($event)"
+                [cdkDropListConnectedTo]="[macroList]" [cdkDropListData]="favorites">
+                <app-command cdkDrag *ngFor="let command of favorites" [command]="command"
+                    (remove)="removeFavorite.emit(command)"></app-command>
+
+            </div>
+            <i *ngIf="favorites.length === 0">Define a macro key to save it as a favorite</i>
+
+        </mat-expansion-panel>
+
+    </mat-accordion>
+
+</div>

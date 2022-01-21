@@ -1,0 +1,19 @@
+<header id="header">
+    <button style="float: right" color="primary" mat-mini-fab title="Export" (click)="export()">
+        <mat-icon>file_download</mat-icon>
+    </button>
+
+    <h1>CircuitPython Macropad Builder</h1>
+</header>
+
+<app-config *ngIf="apps.length > currentIndex" [config]="apps[currentIndex]" [hasPrevious]="currentIndex > 0"
+    [hasNext]="currentIndex < apps.length - 1" [favorites]="favorites" (new)="newConfig()"
+    (next)="currentIndex = currentIndex + 1" (previous)="currentIndex = currentIndex - 1" (remove)="removeConfig()"
+    (addFavorite)="addFavorite($event)" (removeFavorite)="removeFavorite($event)" (changed)="save()">
+</app-config>
+
+<footer id="footer">
+    <div class="content">
+        Made with ♥ by <a href="https://github.com/nova706/">Nova706</a>
+    </div>
+</footer>

@@ -1,0 +1,16 @@
+export enum CommandType {
+    MODIFIER_ON = 'MODIFIER_ON',
+    MODIFIER_OFF = 'MODIFIER_OFF',
+    KEYPRESS = 'KEYPRESS',
+    CONSUMER_CONTROL = 'CONSUMER_CONTROL',
+    MOUSE_BUTTON = 'MOUSE_BUTTON',
+    MOUSE_WHEEL = 'MOUSE_WHEEL',
+    MOUSE_X = 'MOUSE_X',
+    MOUSE_Y = 'MOUSE_Y',
+    TONE = 'TONE',
+    TONE_STOP = 'TONE_STOP',
+    TEXT = 'TEXT',
+    WAIT = 'WAIT',
+    RPC = 'RPC',
+    FAVORITE = 'FAVORITE'
+}

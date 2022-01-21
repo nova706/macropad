@@ -1,0 +1,39 @@
+:host {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    margin: 4px;
+    background-color: #aaa;
+    border: 4px solid #999;
+    border-radius: 4px;
+}
+
+:host:after {
+    content: '';
+    display: block;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    z-index: 1;
+    width: 52px;
+    height: 52px;
+    background-color: #ccc;
+    border-radius: 6px;
+}
+:host .indicator {
+    position: absolute;
+    width: 8px;
+    height: 12px;
+    background: #fff;
+    top: 0;
+    left: 50%;
+    margin-left: -4px;
+    z-index: 2;
+    opacity: 50%;
+}
+:host.selected .indicator {
+    opacity: 100%;
+}
+:host:not(.selected) {
+    box-shadow: none !important;
+}

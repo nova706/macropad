@@ -1,0 +1,11 @@
+{
+    "name": "macropad",
+    "version": "0.0.0",
+    "scripts": {},
+    "private": true,
+    "dependencies": {
+        "serialport": "~9.2.8",
+        "wyze-node": "~2.0.6",
+        "dotenv": "~14.2.0"
+    }
+}
