@@ -2,10 +2,9 @@ import { CdkDragDrop, copyArrayItem, moveItemInArray } from '@angular/cdk/drag-d
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommandService } from '../command.service';
 import { CommandType } from '../enums/command-type';
-import { Keycode } from '../enums/keycode';
 import { ExportService } from '../export.service';
+import { App } from '../interfaces/app';
 import { Command } from '../interfaces/command';
-import { Config } from '../interfaces/config';
 import { Macro } from '../interfaces/macro';
 
 @Component({
@@ -15,7 +14,7 @@ import { Macro } from '../interfaces/macro';
 })
 export class ConfigComponent implements OnInit {
 
-    @Input() config!: Config;
+    @Input() config!: App;
     @Input() favorites!: Command[];
     @Input() hasPrevious: boolean = false;
     @Input() hasNext: boolean = false;
@@ -28,7 +27,7 @@ export class ConfigComponent implements OnInit {
     @Output() removeFavorite = new EventEmitter<Command>();
     @Output() changed = new EventEmitter<any>();
 
-    selectedMacro: Macro | undefined;
+    selectedMacro: number = -1;
 
     section = 0;
 
@@ -50,9 +49,9 @@ export class ConfigComponent implements OnInit {
         this.otherControls = this.allCommands.filter(command => command.type === CommandType.TEXT || command.type === CommandType.WAIT || command.type === CommandType.TONE || command.type === CommandType.TONE_STOP || command.type === CommandType.RPC);
     }
 
-    selectMacro(macro: Macro | undefined) {
-        this.selectedMacro = macro;
-        this.commands = this.selectedMacro ? this.selectedMacro.commands : [];
+    selectMacro(index: number | undefined) {
+        this.selectedMacro = index === undefined ? -1 : index;
+        this.commands = this.config.macros[this.selectedMacro] ? this.config.macros[this.selectedMacro].commands : [];
     }
 
     drop(event: CdkDragDrop<Command[]>) {
@@ -75,11 +74,11 @@ export class ConfigComponent implements OnInit {
     }
 
     removeCommand(command: Command) {
-        this.selectedMacro?.commands.splice(this.selectedMacro.commands.indexOf(command), 1);
+        this.config.macros[this.selectedMacro]?.commands.splice(this.config.macros[this.selectedMacro].commands.indexOf(command), 1);
         this.changed.emit();
     }
 
     getMacroText() {
-        return ExportService.getMacroContent(this.selectedMacro);
+        return ExportService.getMacroContent(this.config.macros[this.selectedMacro]);
     };
 }

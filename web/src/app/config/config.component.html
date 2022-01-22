@@ -1,6 +1,6 @@
 <div class="config">
 
-    <button *ngIf="hasPrevious" mat-icon-button title="Previous Configuration" (click)="previous.emit()">
+    <button [disabled]="!hasPrevious" mat-icon-button title="Previous Configuration" (click)="previous.emit()">
         <mat-icon>chevron_left</mat-icon>
     </button>
 
@@ -9,7 +9,7 @@
         <input matInput type="text" [(ngModel)]="config.name" maxlength="20" required />
     </mat-form-field>
 
-    <button *ngIf="hasNext" mat-icon-button title="Next Configuration" (click)="next.emit()">
+    <button [disabled]="!hasNext" mat-icon-button title="Next Configuration" (click)="next.emit()">
         <mat-icon>chevron_right</mat-icon>
     </button>
 
@@ -26,28 +26,29 @@
 
 <div class="macro">
 
-    <mat-form-field *ngIf="selectedMacro">
+    <mat-form-field *ngIf="config.macros[selectedMacro]">
         <mat-label>Macro Name</mat-label>
-        <input matInput type="text" [(ngModel)]="selectedMacro.name" (change)="changed.emit()" maxlength="20"
-            required />
+        <input matInput type="text" [(ngModel)]="config.macros[selectedMacro].name" (change)="changed.emit()"
+            maxlength="20" required />
     </mat-form-field>
 
-    <button mat-icon-button *ngIf="selectedMacro" class="color4"
-        [disabled]="!selectedMacro.name || selectedMacro.commands.length === 0" title="Add Favorite"
-        (click)="addFavorite.emit(selectedMacro)">
+    <button mat-icon-button *ngIf="config.macros[selectedMacro]" class="color4"
+        [disabled]="!config.macros[selectedMacro].name || config.macros[selectedMacro].commands.length === 0"
+        title="Add Favorite" (click)="addFavorite.emit(config.macros[selectedMacro])">
         <mat-icon>favorite</mat-icon>
     </button>
 
     <br />
 
-    <mat-form-field *ngIf="selectedMacro">
+    <mat-form-field *ngIf="config.macros[selectedMacro]">
         <mat-label>LED Color</mat-label>
-        <input matInput type="color" [(ngModel)]="selectedMacro.color" (change)="changed.emit()" required />
+        <input matInput type="color" [(ngModel)]="config.macros[selectedMacro].color" (change)="changed.emit()"
+            required />
     </mat-form-field>
 
     <div class="commands" #macroList="cdkDropList" cdkDropList (cdkDropListDropped)="drop($event)"
         [cdkDropListData]="commands">
-        <app-command cdkDrag *ngFor="let command of selectedMacro?.commands" [command]="command"
+        <app-command cdkDrag *ngFor="let command of config.macros[selectedMacro]?.commands" [command]="command"
             (remove)="removeCommand(command)" (changed)="changed.emit()">
         </app-command>
     </div>

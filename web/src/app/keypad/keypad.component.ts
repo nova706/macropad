@@ -9,20 +9,20 @@ import { Macro } from '../interfaces/macro';
 export class KeypadComponent implements OnInit {
 
     @Input() macros!: Array<Macro>;
-    @Output() selectionChange = new EventEmitter<Macro | undefined>();
+    @Output() selectionChange = new EventEmitter<number | undefined>();
 
-    selectedMacro: Macro | undefined;
+    selectedMacro: number | undefined;
 
     constructor() { }
 
     ngOnInit(): void {
     }
 
-    selectKey(macro: Macro) {
-        if (this.selectedMacro === macro) {
+    selectKey(index: number) {
+        if (this.selectedMacro === index) {
             this.selectedMacro = undefined;
         } else {
-            this.selectedMacro = macro
+            this.selectedMacro = index
         }
         this.selectionChange.emit(this.selectedMacro);
     }

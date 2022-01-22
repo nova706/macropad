@@ -13,6 +13,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { HttpClientModule } from '@angular/common/http';
 
 @NgModule({
     declarations: [
@@ -25,6 +26,7 @@ import { MatInputModule } from '@angular/material/input';
     imports: [
         BrowserModule,
         FormsModule,
+        HttpClientModule,
         BrowserAnimationsModule,
         DragDropModule,
         MatButtonModule,

@@ -1,11 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { CommandService } from './command.service';
-import { Config } from './interfaces/config';
 import { Keycode } from './enums/keycode';
 import { Command } from './interfaces/command';
 import { CommandType } from './enums/command-type';
 import { Macro } from './interfaces/macro';
 import { ExportService } from './export.service';
+import { ApiService } from './api.service';
+import { App } from './interfaces/app';
 
 @Component({
     selector: 'app-root',
@@ -17,11 +18,12 @@ export class AppComponent implements OnInit {
     title = 'macropad';
     currentIndex = 0;
 
-    exampleApp = {
+    exampleApp: App = {
 
         // REQUIRED dict, must be named 'app'
         // MACROPAD Hotkeys example: Safari web browser for Mac
         name: 'Mac Safari', // Application name
+        order: 0,
         macros: [           // List of button macros...
 
             // First Row
@@ -94,8 +96,10 @@ export class AppComponent implements OnInit {
         ]
     }
 
-    apps: Config[] = [];
+    apps: App[] = [];
     favorites: Command[] = [];
+
+    constructor(private apiService: ApiService) { }
 
     ngOnInit(): void {
         this.load();
@@ -104,6 +108,7 @@ export class AppComponent implements OnInit {
     newConfig() {
         this.apps.push({
             name: '',
+            order: this.apps.length,
             macros: Array.from({ length: 12 }, () => ({
                 name: '',
                 color: '#000000',
@@ -143,20 +148,24 @@ export class AppComponent implements OnInit {
     }
 
     save() {
-        localStorage.setItem('apps', JSON.stringify(this.apps));
+        this.apiService.saveMacros(this.apps).subscribe(macros => {
+            this.apps = macros;
+        });
+
         localStorage.setItem('favorites', JSON.stringify(this.favorites));
     }
 
     private load() {
-        const apps = localStorage.getItem('apps');
         const favorites = localStorage.getItem('favorites');
-
-        this.apps = apps ? JSON.parse(apps) : [];
         this.favorites = favorites ? JSON.parse(favorites) : [];
 
-        if (this.apps.length === 0) {
-            this.apps.push(this.exampleApp);
-        }
+        this.apiService.getMacros().subscribe(macros => {
+            this.apps = macros;
+
+            if (this.apps.length === 0) {
+                this.apps.push(this.exampleApp);
+            }
+        });
     }
 
     private build(textArray: Array<string | number>): Array<Command> {

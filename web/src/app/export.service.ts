@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import * as JSZip from 'jszip';
 import * as FileSaver from 'file-saver';
-import { Config } from './interfaces/config';
 import { CommandType } from './enums/command-type';
 import { Macro } from './interfaces/macro';
+import { App } from './interfaces/app';
 
 @Injectable({
     providedIn: 'root'
@@ -12,7 +12,7 @@ export class ExportService {
 
     constructor() { }
 
-    static export(apps: Config[]) {
+    static export(apps: App[]) {
         const zip = new JSZip();
 
         for (let i = 0; i < apps.length; i++) {
@@ -26,7 +26,7 @@ export class ExportService {
 
     }
 
-    private static getContent(app: Config): string {
+    private static getContent(app: App): string {
 
         let lines = [];
 
