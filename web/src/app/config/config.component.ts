@@ -2,7 +2,6 @@ import { CdkDragDrop, copyArrayItem, moveItemInArray } from '@angular/cdk/drag-d
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommandService } from '../command.service';
 import { CommandType } from '../enums/command-type';
-import { ExportService } from '../export.service';
 import { App } from '../interfaces/app';
 import { Command } from '../interfaces/command';
 import { Macro } from '../interfaces/macro';
@@ -54,7 +53,7 @@ export class ConfigComponent implements OnInit {
         this.commands = this.config.macros[this.selectedMacro] ? this.config.macros[this.selectedMacro].commands : [];
     }
 
-    drop(event: CdkDragDrop<Command[]>) {
+    drop(event: CdkDragDrop<Command[] | any>) {
         if (event.previousContainer === event.container) {
             moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
         } else {
@@ -64,7 +63,7 @@ export class ConfigComponent implements OnInit {
                 event.previousIndex,
                 event.currentIndex,
             );
-            event.container.data[event.currentIndex] = JSON.parse(JSON.stringify(event.container.data[event.currentIndex]));
+            event.container.data[event.currentIndex] = this.cloneCommand(event.container.data[event.currentIndex]);
         }
         this.changed.emit();
     }
@@ -78,7 +77,7 @@ export class ConfigComponent implements OnInit {
         this.changed.emit();
     }
 
-    getMacroText() {
-        return ExportService.getMacroContent(this.config.macros[this.selectedMacro]);
-    };
+    private cloneCommand(command: Command) {
+        return Object.assign({}, command);
+    }
 }

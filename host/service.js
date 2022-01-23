@@ -26,12 +26,14 @@ module.exports = class Service {
     }
 
     /**
-     * Save the macro changes to the DB and update the pad
+     * Save the macro changes to the DB, update the pad and return the macros
      * @param {*} macros 
+     * @returns the macros
      */
     saveMacros(macros) {
         this.db.saveMacros(macros);
         this._refreshPad();
+        return this.db.getMacros();
     }
 
     /**

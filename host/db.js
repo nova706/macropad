@@ -32,7 +32,7 @@ module.exports = class DB {
      * Saves the cached data to the DB file
      */
     _save() {
-        this.db.JSON(this.cache);
+        this.db.set("macros", this.cache.macros);
     }
 
     /**
@@ -48,9 +48,8 @@ module.exports = class DB {
     }
 
     /**
-     * Saves all macros (create/update/delete) and returns the new set
+     * Saves all macros (create/update/delete)
      * @param {*} macros the macros to save
-     * @returns all macros
      */
     saveMacros(macros) {
         if (!this.cache.macros) {
@@ -82,8 +81,6 @@ module.exports = class DB {
         this.cache.macros = this.cache.macros.filter(macro => idsToKeep.indexOf(macro.id) >= 0);
 
         this._save();
-
-        return this.cache.macros;
     }
 
     /**

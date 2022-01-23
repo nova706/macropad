@@ -6,7 +6,7 @@
 
     <mat-form-field>
         <mat-label>Configuration Name</mat-label>
-        <input matInput type="text" [(ngModel)]="config.name" maxlength="20" required />
+        <input matInput type="text" [(ngModel)]="config.name" maxlength="20" (change)="changed.emit()" required />
     </mat-form-field>
 
     <button [disabled]="!hasNext" mat-icon-button title="Next Configuration" (click)="next.emit()">
@@ -47,13 +47,11 @@
     </mat-form-field>
 
     <div class="commands" #macroList="cdkDropList" cdkDropList (cdkDropListDropped)="drop($event)"
-        [cdkDropListData]="commands">
+        [cdkDropListData]="config.macros[selectedMacro]?.commands">
         <app-command cdkDrag *ngFor="let command of config.macros[selectedMacro]?.commands" [command]="command"
             (remove)="removeCommand(command)" (changed)="changed.emit()">
         </app-command>
     </div>
-
-    <code>{{getMacroText()}}</code>
 </div>
 
 <div class="command-list">

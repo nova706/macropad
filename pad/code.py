@@ -25,7 +25,7 @@ from adafruit_displayio_sh1107_wrapper import SH1107_Wrapper
 
 # CONFIGURABLES ------------------------
 
-STARTING_BRIGHTNESS = 0.01
+STARTING_BRIGHTNESS = 0.10
 INACTIVITY_TIMER = 15 * 60
 OFF_DELAY = 0.75
 
@@ -372,43 +372,44 @@ while True:
                 macropad.pixels[key_number] = 0xFFFFFF
                 macropad.pixels.show()
 
-            for command in commands:
+            if commands:
+                for command in commands:
 
-                value = get_command_value(command)
-                type = command['type']
+                    value = get_command_value(command)
+                    type = command['type']
 
-                if type == "TEXT":
-                    macropad.keyboard_layout.write(value)
-                elif type == "KEYPRESS":
-                    if isinstance(value, str):
+                    if type == "TEXT":
                         macropad.keyboard_layout.write(value)
-                    else:
+                    elif type == "KEYPRESS":
+                        if isinstance(value, str):
+                            macropad.keyboard_layout.write(value)
+                        else:
+                            macropad.keyboard.press(value)
+                            macropad.keyboard.release(value)
+                    elif type == "CONSUMER_CONTROL":
+                        macropad.consumer_control.release()
+                        macropad.consumer_control.press(value)
+                    elif type == "MODIFIER_ON":
                         macropad.keyboard.press(value)
+                    elif type == "MODIFIER_OFF":
                         macropad.keyboard.release(value)
-                elif type == "CONSUMER_CONTROL":
-                    macropad.consumer_control.release()
-                    macropad.consumer_control.press(value)
-                elif type == "MODIFIER_ON":
-                    macropad.keyboard.press(value)
-                elif type == "MODIFIER_OFF":
-                    macropad.keyboard.release(value)
-                elif type == "MOUSE_BUTTON":
-                    if command['text'].startswith('-'):
-                        macropad.mouse.release(value)
-                    else:
-                        macropad.mouse.press(value)
-                elif type == "TONE":
-                    macropad.start_tone(value)
-                elif type == "TONE_STOP":
-                    macropad.stop_tone()
-                elif type == "WAIT":
-                    time.sleep(value)
-                elif type == "RPC":
-                    serial_write(value)
+                    elif type == "MOUSE_BUTTON":
+                        if command['text'].startswith('-'):
+                            macropad.mouse.release(value)
+                        else:
+                            macropad.mouse.press(value)
+                    elif type == "TONE":
+                        macropad.start_tone(value)
+                    elif type == "TONE_STOP":
+                        macropad.stop_tone()
+                    elif type == "WAIT":
+                        time.sleep(value)
+                    elif type == "RPC":
+                        serial_write(value)
 
-                macropad.mouse.move(value if command['type'] == 'MOUSE_X' else 0,
-                                    value if command['type'] == 'MOUSE_Y' else 0,
-                                    value if command['type'] == 'MOUSE_WHEEL' else 0)
+                    macropad.mouse.move(value if command['type'] == 'MOUSE_X' else 0,
+                                        value if command['type'] == 'MOUSE_Y' else 0,
+                                        value if command['type'] == 'MOUSE_WHEEL' else 0)
 
         else:
 
@@ -417,13 +418,14 @@ while True:
             # than release_all()) because pad supports multi-key rollover, e.g.
             # could have a meta key or right-mouse held down by one macro and
             # press/release keys/buttons with others. Navigate popups, etc.
-            for item in command:
+            if commands:
+                for command in commands:
 
-                value = get_command_value(command)
-                if isinstance(value, int) and (command['type'] == "KEYPRESS" or command['type'] == "MODIFIER_ON"):
-                    macropad.keyboard.release(value)
-                elif isinstance(value, int) and command['type'] == "MOUSE_BUTTON":
-                    macropad.mouse.release(value)
+                    value = get_command_value(command)
+                    if isinstance(value, int) and (command['type'] == "KEYPRESS" or command['type'] == "MODIFIER_ON"):
+                        macropad.keyboard.release(value)
+                    elif isinstance(value, int) and command['type'] == "MOUSE_BUTTON":
+                        macropad.mouse.release(value)
 
             macropad.stop_tone()
             macropad.consumer_control.release()

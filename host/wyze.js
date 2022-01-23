@@ -24,7 +24,69 @@ module.exports = class WyzeClient {
         color: "P1507"
     };
 
-    async runActionList(instanceId, providerKey, actionKeys) {
+    /**
+     * Set wyze bulb color preset (brightness: int 0-100, color: hex without #)
+     * @param {*} presets 
+     */
+    setPreset(presets) {
+
+        let actionList = [];
+
+        if (presets instanceof Array) {
+            for (let i = 0; i < presets.length && i < this.devices.length; i++) {
+                actionList = actionList.concat(this._getBulbPresetActions(this.devices[i], presets[i]));
+            }
+        } else {
+            this.devices.forEach(bulb => {
+                actionList = actionList.concat(this._getBulbPresetActions(bulb, presets));
+            });
+        }
+
+        if (actionList.length > 0) {
+            this._runActionList(actionList[0].device_mac, actionList[0].provider_key, actionList);
+        }
+    }
+
+    /**
+     * Gets a list of actions to run for a bulb based on preset values
+     * @param {*} bulb Wyze Bulb Color
+     * @param {*} preset Preset data for bulb properties
+     * @returns The list of actions to run
+     */
+    _getBulbPresetActions(bulb, preset) {
+        const actionList = [];
+
+        if (!!preset.brightness) {
+            actionList.push({
+                key: "set_mesh_property",
+                prop: WyzeClient.props.brightness,
+                value: preset.brightness,
+                device_mac: bulb.mac,
+                provider_key: bulb.product_model,
+            });
+        }
+
+        if (!!preset.color) {
+            actionList.push({
+                key: "set_mesh_property",
+                prop: WyzeClient.props.color,
+                value: preset.color,
+                device_mac: bulb.mac,
+                provider_key: bulb.product_model,
+            });
+        }
+
+        return actionList;
+    }
+
+    /**
+     * Runs a set of actions on the Wyze API
+     * @param {string} instanceId Action list instance ID (MAC)
+     * @param {string} providerKey Action list provider key (product)
+     * @param {*[]} actionKeys actionKeys used to build the list of actions to send
+     * @returns resulting data
+     */
+    async _runActionList(instanceId, providerKey, actionKeys) {
         let result;
 
         try {
@@ -70,7 +132,7 @@ module.exports = class WyzeClient {
 
             if (result.data.msg === 'AccessTokenError') {
                 await this.wyze.getRefreshToken();
-                return runActionList(instanceId, providerKey, actionKeys);
+                return _runActionList(instanceId, providerKey, actionKeys);
             }
         } catch (e) {
             throw e;
@@ -78,44 +140,4 @@ module.exports = class WyzeClient {
 
         return result.data;
     }
-
-    setBulbPreset(preset, bulb) {
-        const actionList = [];
-
-        if (!!preset.brightness) {
-            actionList.push({
-                key: "set_mesh_property",
-                prop: WyzeClient.props.brightness,
-                value: preset['brightness'],
-                device_mac: bulb.mac,
-                provider_key: bulb.product_model,
-            });
-        }
-
-        if (!!preset.color) {
-            actionList.push({
-                key: "set_mesh_property",
-                prop: WyzeClient.props.color,
-                value: preset['color'],
-                device_mac: bulb.mac,
-                provider_key: bulb.product_model,
-            });
-        }
-
-        if (actionList.length > 0) {
-            this.runActionList(bulb.mac, bulb.product_model, actionList);
-        }
-    }
-
-    setPreset(presets) {
-        if (presets instanceof Array) {
-            for (let i = 0; i < presets.length && i < this.devices.length; i++) {
-                this.setBulbPreset(presets[i], this.devices[i]);
-            }
-        } else {
-            this.devices.forEach(bulb => this.setBulbPreset(presets, bulb));
-        }
-    }
-
-
 }

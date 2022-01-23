@@ -4,12 +4,14 @@
 </button>
 
 <mat-form-field appearance="fill" *ngIf="command.type === CommandType.TEXT || command.type === CommandType.RPC">
-    <textarea matInput [(ngModel)]="command.text" (changed)="changed.emit()"></textarea>
+    <textarea matInput rows="6" [(ngModel)]="command.text" (changed)="changed.emit()"
+        (mousedown)="$event.stopPropagation()"></textarea>
 </mat-form-field>
 
 <mat-form-field appearance="fill"
     *ngIf="command.type === CommandType.WAIT || command.type === CommandType.MOUSE_WHEEL || command.type === CommandType.MOUSE_X || command.type === CommandType.MOUSE_Y || command.type === CommandType.TONE">
-    <input matInput type="number" [(ngModel)]="command.text" (changed)="changed.emit()" />
+    <input matInput type="number" [(ngModel)]="command.text" (changed)="changed.emit()"
+        (mousedown)="$event.stopPropagation()" />
 
     <span matSuffix *ngIf="command.type === CommandType.WAIT">s</span>
     <span matSuffix *ngIf="command.type === CommandType.MOUSE_WHEEL">steps</span>

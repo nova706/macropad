@@ -6,7 +6,7 @@
     <h1>CircuitPython Macropad Builder</h1>
 </header>
 
-<app-config *ngIf="apps.length > currentIndex" [config]="apps[currentIndex]" [hasPrevious]="currentIndex > 0"
+<app-config *ngIf="apps && apps.length > currentIndex" [config]="apps[currentIndex]" [hasPrevious]="currentIndex > 0"
     [hasNext]="currentIndex < apps.length - 1" [favorites]="favorites" (new)="newConfig()"
     (next)="currentIndex = currentIndex + 1" (previous)="currentIndex = currentIndex - 1" (remove)="removeConfig()"
     (addFavorite)="addFavorite($event)" (removeFavorite)="removeFavorite($event)" (changed)="save()">
