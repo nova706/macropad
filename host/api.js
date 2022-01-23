@@ -1,15 +1,37 @@
 const express = require('express')
-const router = express.Router()
-const DB = require('./db');
 
-const db = new DB('./db/macros.json');
+module.exports = class Api {
 
-router.get('/', (req, res) => {
-    res.send(db.getMacros())
-})
+    /**
+     * Class to manage API communication from the web client
+     * @param {Service} service 
+     */
+    constructor(service) {
+        this.service = service;
 
-router.put('/', (req, res) => {
-    res.send(db.saveMacros(req.body));
-})
+        this.router = express.Router()
 
-module.exports = router;
+        /**
+         * Get all macros
+         */
+        this.router.get('/', (req, res) => {
+            res.send(this.service.getMacros())
+        })
+
+        /**
+         * Update the set of macros
+         */
+        this.router.put('/', (req, res) => {
+            res.send(this.service.saveMacros(req.body));
+        })
+    }
+
+    /**
+     * Get the Express router to use in API communication
+     * @returns The Express router
+     */
+    getRouter() {
+        return this.router;
+    }
+
+}

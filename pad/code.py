@@ -7,9 +7,9 @@ set, press MACROPAD keys to send key sequences and other USB protocols.
 
 # pylint: disable=import-error, unused-import, too-few-public-methods
 
-import os
 import time
 import displayio
+import json
 import terminalio
 import time
 import usb_cdc
@@ -17,19 +17,27 @@ from adafruit_display_shapes.rect import Rect
 from adafruit_display_text import label
 from adafruit_macropad import MacroPad
 from adafruit_hid.consumer_control_code import ConsumerControlCode
+from adafruit_hid.keycode import Keycode
+from adafruit_hid.mouse import Mouse
 
 from autoscreen import AutoOffScreen
 from adafruit_displayio_sh1107_wrapper import SH1107_Wrapper
 
 # CONFIGURABLES ------------------------
 
-MACRO_FOLDER = '/macros'
-STARTING_BRIGHTNESS = 0.10
+STARTING_BRIGHTNESS = 0.01
 INACTIVITY_TIMER = 15 * 60
 OFF_DELAY = 0.75
 
 
 # CLASSES AND FUNCTIONS ----------------
+
+def get_color(macro):
+    if 'color' in macro.keys():
+        return int(macro['color'][1:], 16)
+    else:
+        return 0
+
 
 class App:
     """ Class representing a host-side application, for which we have a set
@@ -46,8 +54,8 @@ class App:
         group[13].text = '< ' + self.name + ' >'   # Application name
         for i in range(12):
             if i < len(self.macros):  # Key in use, set label + LED color
-                macropad.pixels[i] = self.macros[i][0]
-                group[i].text = self.macros[i][1]
+                macropad.pixels[i] = get_color(self.macros[i])
+                group[i].text = self.macros[i]['name']
             else:  # Key not in use, no label or LED
                 macropad.pixels[i] = 0
                 group[i].text = ''
@@ -98,24 +106,15 @@ group.append(label.Label(terminalio.FONT, text='', color=0x000000,
                          anchor_point=(0.5, 0.0)))
 macropad.display.show(group)
 
-# Load all the macro key setups from .py files in MACRO_FOLDER
-apps = []
-files = os.listdir(MACRO_FOLDER)
-files.sort()
-for filename in files:
-    if filename.endswith('.py'):
-        try:
-            module = __import__(MACRO_FOLDER + '/' + filename[:-3])
-            apps.append(App(module.app))
-        except (SyntaxError, ImportError, AttributeError, KeyError, NameError,
-                IndexError, TypeError) as err:
-            pass
 
-if not apps:
-    group[13].text = 'NO MACRO FILES FOUND'
+apps = []
+group[13].text = 'Waiting for Macros'
+macropad.display.refresh()
+
+
+def debug(text):
+    group[13].text = str(text)
     macropad.display.refresh()
-    while True:
-        pass
 
 
 def serial_read():
@@ -124,12 +123,13 @@ def serial_read():
     try:
         value = uart.readline()
 
-        if value == None or value == b'':
-            return_value = None
-        else:
-            return_value = value.decode()
+        if not (value == None or value == b''):
+            value = value.decode()
+
+        if isinstance(value, str):
+            return_value = value
     except:
-        return_value = None
+        pass
 
     return return_value
 
@@ -154,10 +154,56 @@ def toggle_lights(on):
     macropad.pixels.show()
 
 
+def handle_serial(value):
+
+    global apps
+    global app_index
+    global brightness
+
+    try:
+        value = json.loads(value)
+    except:
+        return
+
+    # If sending list of apps, load them
+    if 'apps' in value.keys():
+        apps = []
+        for app in value['apps']:
+            apps.append(App(app))
+
+        # If index out of range, show first app
+        if app_index >= len(apps):
+            app_index = 0
+        if apps:
+            apps[app_index].switch()
+
+    if 'brightness' in value.keys():
+        macropad.pixels.brightness = value['brightness']
+        brightness = macropad.pixels.brightness
+        macropad.pixels.show()
+
+    # Switch app
+    if 'index' in value.keys() and value['index'] < len(apps):
+        app_index = value['index']
+        apps[app_index].switch()
+
+
+def get_command_value(command):
+    if command['type'] == "TEXT":
+        return command['text']
+    elif command['text'].startswith("Keycode.") or command['text'].startswith("ConsumerControlCode.") or command['text'].startswith("Mouse."):
+        return eval(command['text'])
+    elif command['text'].startswith("-Keycode.") or command['text'].startswith("-Mouse."):
+        return eval(command['text'][1:])
+    else:
+        return command['text']
+
+
 last_position = macropad.encoder
 change = 0
 app_index = 0
-apps[app_index].switch()
+if apps:
+    apps[app_index].switch()
 
 # Mode sets what function rotating the encoder performs
 # 0: select app, 1: brightness, 2: volume, 3: scroll
@@ -193,10 +239,10 @@ while True:
     end = time.time()
 
     serial_value = serial_read()
-    if not serial_value == None:
-        if serial_value.endswith('Visual Studio Code'):
-            app_index = 2
-            apps[app_index].switch()
+
+    # handle incoming serial command
+    if not serial_value == None and isinstance(serial_value, str):
+        handle_serial(serial_value)
 
     # True if the encoder is released in this frame
     elif encoder_released:
@@ -287,7 +333,7 @@ while True:
                 macropad.mouse.move(0, 0, -1)
             else:
                 macropad.mouse.move(0, 0, 1)
-        else:
+        elif apps:
             # If it's changed, switch apps.
             if change > 0:
                 app_index = app_index + 1
@@ -299,7 +345,7 @@ while True:
                 app_index = len(apps) - 1
             apps[app_index].switch()
 
-    else:
+    elif apps:
 
         # Encoder is not being used, check key press
         event = macropad.keys.events.get()
@@ -318,72 +364,71 @@ while True:
         # and there IS a corresponding macro available for it...other situations
         # are avoided by 'continue' statements above which resume the loop.
 
-        sequence = apps[app_index].macros[key_number][2]
+        commands = apps[app_index].macros[key_number]['commands']
+
         if pressed:
-            # 'sequence' is an arbitrary-length list, each item is one of:
-            # Positive integer (e.g. Keycode.KEYPAD_MINUS): key pressed
-            # Negative integer: (absolute value) key released
-            # Float (e.g. 0.25): delay in seconds
-            # String (e.g. "Foo"): corresponding keys pressed & released
-            # List []: one or more Consumer Control codes (can also do float delay)
-            # Dict {}: mouse buttons/motion (might extend in future)
+
             if key_number < 12:  # No pixel for encoder button
                 macropad.pixels[key_number] = 0xFFFFFF
                 macropad.pixels.show()
-            for item in sequence:
 
-                if isinstance(item, int):
-                    if item >= 0:
-                        macropad.keyboard.press(item)
+            for command in commands:
+
+                value = get_command_value(command)
+                type = command['type']
+
+                if type == "TEXT":
+                    macropad.keyboard_layout.write(value)
+                elif type == "KEYPRESS":
+                    if isinstance(value, str):
+                        macropad.keyboard_layout.write(value)
                     else:
-                        macropad.keyboard.release(-item)
-                elif isinstance(item, float):
-                    time.sleep(item)
-                elif isinstance(item, str):
-                    macropad.keyboard_layout.write(item)
-                elif isinstance(item, list):
-                    for code in item:
-                        if isinstance(code, int):
-                            macropad.consumer_control.release()
-                            macropad.consumer_control.press(code)
-                        if isinstance(code, float):
-                            time.sleep(code)
-                elif isinstance(item, dict):
-                    if 'buttons' in item:
-                        if item['buttons'] >= 0:
-                            macropad.mouse.press(item['buttons'])
-                        else:
-                            macropad.mouse.release(-item['buttons'])
-                    macropad.mouse.move(item['x'] if 'x' in item else 0,
-                                        item['y'] if 'y' in item else 0,
-                                        item['wheel'] if 'wheel' in item else 0)
-                    if 'tone' in item:
-                        if item['tone'] > 0:
-                            macropad.stop_tone()
-                            macropad.start_tone(item['tone'])
-                        else:
-                            macropad.stop_tone()
-                    elif 'rpc' in item:
-                        serial_write(item['rpc'])
-                    elif 'play' in item:
-                        macropad.play_file(item['play'])
+                        macropad.keyboard.press(value)
+                        macropad.keyboard.release(value)
+                elif type == "CONSUMER_CONTROL":
+                    macropad.consumer_control.release()
+                    macropad.consumer_control.press(value)
+                elif type == "MODIFIER_ON":
+                    macropad.keyboard.press(value)
+                elif type == "MODIFIER_OFF":
+                    macropad.keyboard.release(value)
+                elif type == "MOUSE_BUTTON":
+                    if command['text'].startswith('-'):
+                        macropad.mouse.release(value)
+                    else:
+                        macropad.mouse.press(value)
+                elif type == "TONE":
+                    macropad.start_tone(value)
+                elif type == "TONE_STOP":
+                    macropad.stop_tone()
+                elif type == "WAIT":
+                    time.sleep(value)
+                elif type == "RPC":
+                    serial_write(value)
+
+                macropad.mouse.move(value if command['type'] == 'MOUSE_X' else 0,
+                                    value if command['type'] == 'MOUSE_Y' else 0,
+                                    value if command['type'] == 'MOUSE_WHEEL' else 0)
 
         else:
+
             # Release any still-pressed keys, consumer codes, mouse buttons
             # Keys and mouse buttons are individually released this way (rather
             # than release_all()) because pad supports multi-key rollover, e.g.
             # could have a meta key or right-mouse held down by one macro and
             # press/release keys/buttons with others. Navigate popups, etc.
-            for item in sequence:
-                if isinstance(item, int):
-                    if item >= 0:
-                        macropad.keyboard.release(item)
-                elif isinstance(item, dict):
-                    if 'buttons' in item:
-                        if item['buttons'] >= 0:
-                            macropad.mouse.release(item['buttons'])
+            for item in command:
+
+                value = get_command_value(command)
+                if isinstance(value, int) and (command['type'] == "KEYPRESS" or command['type'] == "MODIFIER_ON"):
+                    macropad.keyboard.release(value)
+                elif isinstance(value, int) and command['type'] == "MOUSE_BUTTON":
+                    macropad.mouse.release(value)
+
             macropad.stop_tone()
             macropad.consumer_control.release()
+
             if key_number < 12:  # No pixel for encoder button
-                macropad.pixels[key_number] = apps[app_index].macros[key_number][0]
+                macropad.pixels[key_number] = get_color(
+                    apps[app_index].macros[key_number])
                 macropad.pixels.show()
