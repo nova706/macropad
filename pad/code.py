@@ -189,14 +189,16 @@ def handle_serial(value):
 
 
 def get_command_value(command):
-    if command['type'] == "TEXT":
+    if command['type'] == "TEXT" or isinstance(command['text'], int) or isinstance(command['text'], float):
         return command['text']
-    elif command['text'].startswith("Keycode.") or command['text'].startswith("ConsumerControlCode.") or command['text'].startswith("Mouse."):
+
+    if command['text'].startswith("Keycode.") or command['text'].startswith("ConsumerControlCode.") or command['text'].startswith("Mouse."):
         return eval(command['text'])
-    elif command['text'].startswith("-Keycode.") or command['text'].startswith("-Mouse."):
+
+    if command['text'].startswith("-Keycode.") or command['text'].startswith("-Mouse."):
         return eval(command['text'][1:])
-    else:
-        return command['text']
+
+    return command['text']
 
 
 last_position = macropad.encoder
@@ -403,7 +405,7 @@ while True:
                     elif type == "TONE_STOP":
                         macropad.stop_tone()
                     elif type == "WAIT":
-                        time.sleep(value)
+                        time.sleep(float(value))
                     elif type == "RPC":
                         serial_write(value)
 
