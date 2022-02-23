@@ -55,6 +55,11 @@ module.exports = class Serial {
         // Start initial connect sequence
         console.log('Connecting...');
         this._reconnect();
+
+        SerialPort.list().then(ports => {
+            const device = ports.find(port => port.vendorId === '239A' && port.productId === '8108');
+            console.log(device);
+        });
     }
 
     /**
