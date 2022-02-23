@@ -1,0 +1,2 @@
+cd host
+node index
