@@ -3,6 +3,9 @@ const events = require('events');
 
 module.exports = class Serial {
 
+    static ADAFRUIT_VENDOR_ID = '239A';
+    static MACROPAD_PRODUCT_ID = '8108';
+
     /**
      * Class to manage serial communication between the host and pad
      * @param {string} port 
@@ -42,7 +45,7 @@ module.exports = class Serial {
             if (!!json) {
                 try {
                     json = JSON.parse(json);
-                    console.log('Command Recieved', json);
+                    console.log('Command Received', json);
 
                     // Send the data out via event
                     this.eventEmitter.emit('data', json);
@@ -57,8 +60,8 @@ module.exports = class Serial {
         this._reconnect();
 
         SerialPort.list().then(ports => {
-            const device = ports.find(port => port.vendorId === '239A' && port.productId === '8108');
-            console.log(device);
+            const devices = ports.filter(port => port.vendorId === Serial.ADAFRUIT_VENDOR_ID && port.productId === Serial.MACROPAD_PRODUCT_ID);
+            console.log(devices);
         });
     }
 
