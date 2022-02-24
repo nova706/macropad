@@ -11,7 +11,7 @@ const Service = require('./service');
 // Construct the classes
 const wyze = new WyzeClient(process.env.WYZE_USERNAME, process.env.WYZE_PASSWORD)
 const db = new DB('./db/macros.json');
-const serial = new SerialClient(process.env.COM_PORT, 115200)
+const serial = new SerialClient()
 
 // Build the service class
 const service = new Service(db, serial, wyze);
